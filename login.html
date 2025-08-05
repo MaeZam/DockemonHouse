@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autenticación - Casa Inteligente</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="icon"></div>
+        <h1>DockemonHouse</h1>
+        <p class="subtitle">Autenticación Segura</p>
+
+        <!-- Paso 1: Campos de usuario y contraseña -->
+        <div id="credentialsForm">
+            <h3 style="color: #333; margin-bottom: 20px;">Ingresar Datos</h3>
+
+            <div style="text-align: left;">
+                <label for="username" style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Usuario:</label>
+                <input type="text" id="username" placeholder="Ingresa tu usuario">
+            </div>
+
+            <div style="text-align: left;">
+                <label for="password" style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Contraseña:</label>
+                <input type="password" id="password" placeholder="Ingresa tu contraseña">
+            </div>
+
+            <button class="btn btn-primary" id="validateCredentialsBtn" onclick="validateCredentials()">
+                Continuar
+            </button>
+        </div>
+
+        <!-- Separador visual -->
+        <hr style="margin: 30px 0; border: none; height: 2px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: none;" id="separator">
+
+        <!-- Paso 2: Verificación facial -->
+        <div id="faceVerificationSection" style="display: none;">
+            <h3 style="color: #333; margin-bottom: 20px;">Verificación Facial</h3>
+
+            <div class="video-container" id="videoContainer">
+                <video id="videoElement" autoplay muted></video>
+                <div class="video-overlay" id="videoOverlay">
+                    <p>Presiona "Iniciar Cámara" para comenzar</p>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary" id="startBtn" onclick="startCamera()">
+                Iniciar Cámara
+            </button>
+
+            <button class="btn btn-primary" id="verifyFaceBtn" onclick="verifyFace()" disabled>
+                Verificar Rostro
+            </button>
+        </div>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+</body>
+</html>

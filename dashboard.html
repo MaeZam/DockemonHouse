@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DockemonHouse</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="user-info">{{ username }}</div>
+            <a href="/logout" class="logout-btn">Cerrar Sesión</a>
+
+            <h1>DockemonHouse</h1>
+            <p>Bienvenide a tu casa inteligente...</p>
+            <span class="system-status" id="systemStatus">Conectando...</span>
+        </div>
+
+        <!-- Configuraciones -->
+        <div class="config-grid">
+            <div class="config-section">
+                <h3>Configuración Arduino</h3>
+                <div class="config-controls">
+                    <input type="text" id="esp32_ip" class="config-input" value="{{ esp32_ip }}">
+                    <button class="control-btn btn-action" onclick="testESP32Connection()">Probar Conexión</button>
+                    <button class="control-btn btn-on" onclick="setESP32IP()">Guardar IP</button>
+                </div>
+                <div id="esp32ConnectionStatus" style="margin-top: 10px; font-weight: bold;"></div>
+            </div>
+
+            <div class="config-section">
+                <h3>Configuración Cámara</h3>
+                <div class="config-controls">
+                    <input type="text" id="camara_url" class="config-input" value="{{ camara_url }}">
+                    <button class="control-btn btn-action" onclick="testCamaraConnection()">Probar Conexión</button>
+                    <button class="control-btn btn-on" onclick="setCamaraURL()">Guardar URL</button>
+                </div>
+                <div id="camaraConnectionStatus" style="margin-top: 10px; font-weight: bold;"></div>
+            </div>
+        </div>
+
+        <!-- Monitor de Cámara -->
+        <div class="config-section">
+            <h3>Monitor de Cámara</h3>
+            <div style="display: flex; gap: 20px; align-items: flex-start;">
+                <div style="min-width: 200px;">
+                    <div class="area-status" id="camaraStatus">Inactiva</div>
+                    <p style="margin: 10px 0; color: #666;">Estado de la cámara de seguridad</p>
+                </div>
+                <div style="flex-grow: 1; text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px; color: #666; min-height: 300px;">
+                    <div id="cameraContainer">
+                        <img id="cameraStream"
+                             style="max-width: 100%; max-height: 280px; border-radius: 8px; display: none;"
+                             alt="Stream de cámara">
+                        <div id="cameraPlaceholder" style="display: flex; align-items: center; justify-content: center; height: 280px; flex-direction: column;">
+                            <p style="font-size: 48px; margin-bottom: 10px;"></p>
+                            <p>Vista de cámara</p>
+                            <small>Presiona "Iniciar Stream" para ver la cámara</small>
+                            <button class="control-btn btn-action" onclick="toggleCameraStream()" style="margin-top: 15px;" id="streamButton">Iniciar Stream</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sistema de Seguridad -->
+        <div class="areas-grid">
+            <div class="area-card">
+                <div class="area-header">
+                    <div class="area-title">Sistema de Seguridad</div>
+                    <div class="area-status" id="sistemaStatus">Cargando...</div>
+                </div>
+                <div class="area-controls">
+                    <button class="control-btn btn-on" onclick="controlarSistema(true)">Activar</button>
+                    <button class="control-btn btn-off" onclick="controlarSistema(false)">Desactivar</button>
+                </div>
+            </div>
+
+            <div class="area-card">
+                <div class="area-header">
+                    <div class="area-title">Puerta Principal</div>
+                    <div class="area-status" id="puertaPrincipalStatus">Cerrada</div>
+                </div>
+                <div class="area-controls">
+                    <button class="control-btn btn-action" onclick="controlarPuerta('principal', 'abrir')">ABRIR</button>
+                    <button class="control-btn btn-off" onclick="controlarPuerta('principal', 'cerrar')">CERRAR</button>
+                </div>
+                <div style="margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.8);">
+                    <i>Controlada por sistema de seguridad</i>
+                </div>
+            </div>
+
+            <div class="area-card">
+                <div class="area-header">
+                    <div class="area-title">Control de Acceso</div>
+                    <div class="area-status" id="accesoStatus">No autorizada</div>
+                </div>
+                <div class="area-controls">
+                    <button class="control-btn btn-action" onclick="activarReconocimiento()">RECONOCER</button>
+                </div>
+                <div class="area-controls" style="margin-top: 10px;">
+                    <button class="control-btn btn-on" onclick="simularReconocimiento(true)">Sí</button>
+                    <button class="control-btn btn-off" onclick="simularReconocimiento(false)">No</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control de Luces -->
+        <div class="config-section">
+            <h3>Control de Iluminación</h3>
+            <div class="areas-grid">
+                <div class="area-card">
+                    <div class="area-header">
+                        <div class="area-title">Sala</div>
+                        <div class="area-status" id="luzSalaStatus">Apagada</div>
+                    </div>
+                    <div class="area-controls">
+                        <button class="control-btn btn-on" onclick="controlarLuz('sala', 'encender')">ENCENDER</button>
+                        <button class="control-btn btn-off" onclick="controlarLuz('sala', 'apagar')">APAGAR</button>
+                    </div>
+                </div>
+
+                <div class="area-card">
+                    <div class="area-header">
+                        <div class="area-title">Cuarto</div>
+                        <div class="area-status" id="luzCuarto2Status">Apagada</div>
+                    </div>
+                    <div class="area-controls">
+                        <button class="control-btn btn-on" onclick="controlarLuz('cuarto', 'encender')">ENCENDER</button>
+                        <button class="control-btn btn-off" onclick="controlarLuz('cuarto', 'apagar')">APAGAR</button>
+                    </div>
+                </div>
+
+                <div class="area-card">
+                    <div class="area-header">
+                        <div class="area-title">Comedor</div>
+                        <div class="area-status" id="luzComedorStatus">Apagada</div>
+                    </div>
+                    <div class="area-controls">
+                        <button class="control-btn btn-on" onclick="controlarLuz('comedor', 'encender')">ENCENDER</button>
+                        <button class="control-btn btn-off" onclick="controlarLuz('comedor', 'apagar')">APAGAR</button>
+                    </div>
+                </div>
+
+                <div class="area-card">
+                    <div class="area-header">
+                        <div class="area-title">Cocina</div>
+                        <div class="area-status" id="luzCocinaStatus">Apagada</div>
+                    </div>
+                    <div class="area-controls">
+                        <button class="control-btn btn-on" onclick="controlarLuz('cocina', 'encender')">ENCENDER</button>
+                        <button class="control-btn btn-off" onclick="controlarLuz('cocina', 'apagar')">APAGAR</button>
+                    </div>
+                </div>
+
+                <div class="area-card">
+                    <div class="area-header">
+                        <div class="area-title">Lavandería</div>
+                        <div class="area-status" id="luzLavanderiaStatus">Apagada</div>
+                    </div>
+                    <div class="area-controls">
+                        <button class="control-btn btn-on" onclick="controlarLuz('lavanderia', 'encender')">ENCENDER</button>
+                        <button class="control-btn btn-off" onclick="controlarLuz('lavanderia', 'apagar')">APAGAR</button>
+                    </div>
+                </div>
+
+                <div class="area-card">
+                    <div class="area-header">
+                        <div class="area-title">Baño</div>
+                        <div class="area-status" id="luzBanoStatus">Apagada</div>
+                    </div>
+                    <div class="area-controls">
+                        <button class="control-btn btn-on" onclick="controlarLuz('bano', 'encender')">ENCENDER</button>
+                        <button class="control-btn btn-off" onclick="controlarLuz('bano', 'apagar')">APAGAR</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alarmas -->
+        <div class="alarms-section">
+            <h3>Sistema de Alarmas</h3>
+            <div class="alarms-grid">
+                <div class="alarm-card" id="alarmaAcceso">
+                    <h4>Alarma de Acceso</h4>
+                    <p>Detección de personas no autorizadas</p>
+                    <div class="area-status" id="alarmaAccesoStatus">Desactivada</div>
+                    <div class="area-controls" style="margin-top: 15px;">
+                        <button class="control-btn btn-on" onclick="controlarAlarma('acceso', true)">ENCENDER</button>
+                        <button class="control-btn btn-off" onclick="controlarAlarma('acceso', false)">APAGAR</button>
+                    </div>
+                </div>
+
+                <div class="alarm-card" id="alarmaCocina">
+                    <h4>Alarma Cocina</h4>
+                    <p>Temperatura elevada</p>
+                    <div class="area-status" id="alarmaCocinaStatus">Desactivada</div>
+                    <div class="area-controls" style="margin-top: 15px;">
+                        <button class="control-btn btn-on" onclick="controlarAlarma('cocina', true)">ENCENDER</button>
+                        <button class="control-btn btn-off" onclick="controlarAlarma('cocina', false)">APAGAR</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoreo -->
+        <div class="monitor-grid">
+            <!-- Monitor de Cocina -->
+            <div class="kitchen-monitor">
+                <div class="kitchen-header">
+                    <h3>Monitoreo de Cocina</h3>
+                    <div class="area-status" id="kitchenStatus">Sin datos</div>
+                </div>
+                <div class="kitchen-content">
+                    <div class="kitchen-metric" id="tempMetric">
+                        <div class="kitchen-value" id="tempValue">--°C</div>
+                        <div class="kitchen-label">Temperatura</div>
+                        <div class="kitchen-time" id="tempTime">--:--</div>
+                    </div>
+                    <div class="kitchen-metric" id="humidityMetric">
+                        <div class="kitchen-value" id="humidityValue">--%</div>
+                        <div class="kitchen-label">Humedad</div>
+                        <div class="kitchen-time" id="humidityTime">--:--</div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; text-align: center;">
+                    <small style="color: #666;">
+                        Umbral de temperatura: <span id="umbralTemp">40.0°C</span>
+                    </small>
+                </div>
+            </div>
+
+            <!-- Resumen del Sistema (Consolidado) -->
+            <div class="detection-summary">
+                <div class="kitchen-header">
+                    <h3>Resumen del Sistema</h3>
+                    <div class="area-status" id="systemSummaryStatus">Activo</div>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-item">
+                        <div class="summary-number" id="statDetecciones">0</div>
+                        <div class="summary-label">Detecciones hoy</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-number" id="statRostros">{{ total_rostros }}</div>
+                        <div class="summary-label">Rostros autorizados</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-number" id="statDuracionPromedio">0s</div>
+                        <div class="summary-label">Duración promedio</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-number" id="statDistanciaActual">-- cm</div>
+                        <div class="summary-label">Distancia actual</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-number" id="statUltimaAutorizada">--:--</div>
+                        <div class="summary-label">Último acceso OK</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-number" id="statUltimaNoAutorizada">--:--</div>
+                        <div class="summary-label">Último intento fallido</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
